@@ -5,27 +5,27 @@ if [[ -n $DOKKU_API_VERSION ]]; then
   PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
 fi
 source "$PLUGIN_BASE_PATH/common/functions"
-source "$PLUGIN_BASE_PATH/config/functions"
-source "$PLUGIN_BASE_PATH/domains/functions"
-source "$PLUGIN_BASE_PATH/nginx-vhost/functions"
+# source "$PLUGIN_BASE_PATH/config/functions"
+# source "$PLUGIN_BASE_PATH/domains/functions"
+# source "$PLUGIN_BASE_PATH/nginx-vhost/functions"
 source "$(dirname "$0")/config"
 
 set_token() {
   local TOKEN=$1
   [[ ! -n "$TOKEN" ]] && dokku_log_fail "TOKEN must not be null"
-  config_set --global CLOUDFLARE_TOKEN $TOKEN
+  dokku config:set --global CLOUDFLARE_TOKEN $TOKEN
 }
 
 set_email() {
   local EMAIL=$1
   [[ ! -n "$EMAIL" ]] && dokku_log_fail "EMAIL must not be null"
-  config_set --global CLOUDFLARE_EMAIL $EMAIL
+  dokku config:set --global CLOUDFLARE_EMAIL $EMAIL
 }
 
 set_zone() {
   local ZONE=$1
   [[ ! -n "$ZONE" ]] && dokku_log_fail "ZONE must not be null"
-  config_set --global CLOUDFLARE_ZONE $ZONE
+  dokku config:set --global CLOUDFLARE_ZONE $ZONE
 }
 
 create_subdomain_record() {
@@ -74,4 +74,42 @@ update_subdomain_record() {
     -d "name=$domain" \
     -d "content=$PUBLIC_IP" \
     -d 'ttl=1'
+}
+
+# Functions pulled from master of dokku, missing from 3.26
+config_export() {
+  local CONFIG_TYPE="$1"
+  local APP="$2"
+  local ENV_FILE="$DOKKU_ROOT/$APP/ENV"
+
+  [[ $CONFIG_TYPE == "global" ]] && ENV_FILE="$DOKKU_ROOT/ENV"
+  [[ ! -f $ENV_FILE ]] && return 0
+  [[ ! -s $ENV_FILE ]] && return 0
+
+  VARS=$(grep -Eo "export ([a-zA-Z_][a-zA-Z0-9_]*=.*)" $ENV_FILE | cut -d" " -f2-)
+  echo "$VARS" | awk '{print "export " $0}'
+  return 0
+}
+
+get_app_domains() {
+  local APP=$1; local APP_VHOST_FILE="$DOKKU_ROOT/$APP/VHOST"
+  verify_app_name $APP
+  if [[ -f "$APP_VHOST_FILE" ]];then
+    cat "$APP_VHOST_FILE"
+  fi
+}
+is_app_vhost_enabled() {
+  local APP=$1; local APP_VHOST_FILE="$DOKKU_ROOT/$APP/VHOST"
+  verify_app_name $APP
+
+  local NO_VHOST=$(config_get $APP NO_VHOST)
+  local APP_VHOST_ENABLED=true
+
+  if [[ "$NO_VHOST" == "1" ]]; then
+    local APP_VHOST_ENABLED=false
+  elif [[ -f "$DOKKU_ROOT/$APP/nginx.conf" ]] && [[ ! -f "$APP_VHOST_FILE" ]] && [[ "$NO_VHOST" != "0" ]]; then
+    local APP_VHOST_ENABLED=false
+  fi
+
+  echo $APP_VHOST_ENABLED
 }
