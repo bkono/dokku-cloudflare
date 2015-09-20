@@ -39,12 +39,12 @@ create_subdomain_record() {
   dokku_log_info1 "Checking if app vhost enabled for $APP"
   [[ "$(is_app_vhost_enabled $APP)" == "false" ]] && return 0
 
-  local PUBLIC_IP=`curl http://icanhazip.com`
+  local PUBLIC_IP=`curl -s http://icanhazip.com > /dev/null`
   dokku_log_info2 "snagged the public_ip of: $PUBLIC_IP"
 
   for domain in $(get_app_domains $APP | xargs); do
     dokku_log_info2 "attempting to create entry for $domain"
-    curl https://www.cloudflare.com/api_json.html \
+    curl -s https://www.cloudflare.com/api_json.html \
       -d 'a=rec_new' \
       -d "tkn=$CLOUDFLARE_TOKEN" \
       -d "email=$CLOUDFLARE_EMAIL" \
@@ -53,6 +53,7 @@ create_subdomain_record() {
       -d "name=$domain" \
       -d "content=$PUBLIC_IP" \
       -d 'ttl=1'
+  dokku_log_info2 ""
     dokku_log_info2 "... done." # TODO: parse the result and indicate success/failure
   done
 }
