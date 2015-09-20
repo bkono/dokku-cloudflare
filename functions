@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+PLUGIN_BASE_PATH="$PLUGIN_PATH"
+if [[ -n $DOKKU_API_VERSION ]]; then
+  PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
+fi
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$PLUGIN_BASE_PATH/config/functions"
+source "$PLUGIN_BASE_PATH/domains/functions"
+source "$PLUGIN_BASE_PATH/nginx-vhost/functions"
 source "$(dirname "$0")/config"
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$PLUGIN_AVAILABLE_PATH/config/functions"
-source "$PLUGIN_AVAILABLE_PATH/domains/functions"
-source "$PLUGIN_AVAILABLE_PATH/nginx-vhost/functions"
 
 set_token() {
   local TOKEN=$1
