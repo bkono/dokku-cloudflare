@@ -12,12 +12,16 @@ source "$(dirname "$0")/config"
 case "$1" in
   $PLUGIN_COMMAND_PREFIX:set:email)
     set_email $2
+    ;;
   $PLUGIN_COMMAND_PREFIX:set:token)
     set_token $2
+    ;;
   $PLUGIN_COMMAND_PREFIX:set:zone)
     set_zone $2
+    ;;
   $PLUGIN_COMMAND_PREFIX:create)
     create_subdomain_record $2
+    ;;
   help)
     HELP=$(cat<<EOF
     $PLUGIN_COMMAND_PREFIX:create <app_name>, Creates a subdomain A record for the app
