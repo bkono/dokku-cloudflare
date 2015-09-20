@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+export CLOUDFLARE_TOKEN=${CLOUDFLARE_TOKEN:="!notset"}
+export CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL:="!notset"}
+export CLOUDFLARE_ZONE=${CLOUDFLARE_ZONE:="!notset"}
