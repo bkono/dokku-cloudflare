@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+PLUGIN_BASE_PATH="$PLUGIN_PATH"
+if [[ -n $DOKKU_API_VERSION ]]; then
+  PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
+fi
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$0")/functions"
+source "$(dirname "$0")/config"
+
+case "$1" in
+  $PLUGIN_COMMAND_PREFIX:set:email)
+    set_email $2
+  $PLUGIN_COMMAND_PREFIX:set:token)
+    set_token $2
+  $PLUGIN_COMMAND_PREFIX:set:zone)
+    set_zone $2
+  $PLUGIN_COMMAND_PREFIX:create)
+    create_subdomain_record $2
+  help)
+    HELP=$(cat<<EOF
+    $PLUGIN_COMMAND_PREFIX:create <app_name>, Creates a subdomain A record for the app
+    $PLUGIN_COMMAND_PREFIX:set:email <email>, Set the email to use for all Cloudflare API calls.  <Required before first use>
+    $PLUGIN_COMMAND_PREFIX:set:token <token>, Set the token to use for all Cloudflare API calls.  <Required before first use>
+    $PLUGIN_COMMAND_PREFIX:set:zone <zone>, Set the zone to use for all Cloudflare API calls.  <Required before first use>
+EOF
+)
+    if [[ -n $DOKKU_API_VERSION ]]; then
+      echo "$HELP"
+    else
+      cat && echo "$HELP"
+    fi
+    ;;
+
+  *)
+    exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
+    ;;
+esac
