@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+PLUGIN_BASE_PATH="$PLUGIN_PATH"
+if [[ -n $DOKKU_API_VERSION ]]; then
+  PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
+fi
+source "$PLUGIN_BASE_PATH/common/functions"
+
+RELEASE_BASE="https://github.com/bkono/dokku-cloudflare-src/releases/download/0.0.1/dokku-cloudflare"
+ARCH=$(uname -m)
+if [ "$ARCH" == "x86_64" ]; then
+  ARCH="amd64"
+else 
+  ARCH="386"
+fi
+
+case $(uname -s) in
+  Linux) 
+    RELEASE="${RELEASE_BASE}_linux_$ARCH"
+    dokku_log_info2 "Linux detected. arch=$ARCH"
+    curl -L -s $RELEASE > dokku-cloudflare
+    ;;
+  Darwin)
+    RELEASE="${RELEASE_BASE}_darwin_$ARCH"
+    dokku_log_info2 "Darwin detected. arch=$ARCH"
+    curl -L -s $RELEASE > dokku-cloudflare
+    ;;
+  *) dokku_log_fail "Unsupported architecture and OS combination: $(uname -s) $ARCH";;
+esac
+
+chown dokku:dokku dokku-cloudflare
